@@ -85,7 +85,7 @@ public class ImGuiLayer {
         RenderTarget target = Minecraft.getInstance().getMainRenderTarget();
         io.setDisplaySize(target.viewWidth, target.viewHeight);
         io.setDisplayFramebufferScale((float) target.width / target.viewWidth, (float) target.viewHeight / target.viewHeight);
-        io.setDeltaTime(Minecraft.getInstance().getDeltaFrameTime() / 20.0f);
+        io.setDeltaTime(Math.max(Minecraft.getInstance().getDeltaFrameTime() / 20.0f, 0.001f));
 
         if(Minecraft.getInstance().screen != null) {
             io.addInputCharactersUTF8(_inputCharacters);
