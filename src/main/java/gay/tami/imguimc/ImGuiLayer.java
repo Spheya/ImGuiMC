@@ -20,6 +20,7 @@ public class ImGuiLayer {
     private ImGuiImplGl3 _imGuiRenderer = new ImGuiImplGl3();
 
     private String _inputCharacters = "";
+    private float _scroll = 0.0f;
 
     public ImGuiLayer() {
         ImGui.createContext();
@@ -76,7 +77,7 @@ public class ImGuiLayer {
         });
 
         _imGuiRenderer.init();
-        newFrame();
+        //newFrame();
     }
 
     private void newFrame() {
@@ -89,6 +90,7 @@ public class ImGuiLayer {
 
         if(Minecraft.getInstance().screen != null) {
             io.addInputCharactersUTF8(_inputCharacters);
+            io.setMouseWheel(_scroll);
 
             io.setKeyCtrl(io.getKeysDown(GLFW_KEY_LEFT_CONTROL) || io.getKeysDown(GLFW_KEY_RIGHT_CONTROL));
             io.setKeyShift(io.getKeysDown(GLFW_KEY_LEFT_SHIFT) || io.getKeysDown(GLFW_KEY_RIGHT_SHIFT));
@@ -99,13 +101,12 @@ public class ImGuiLayer {
             io.setMousePos((float) Minecraft.getInstance().mouseHandler.xpos(), (float) Minecraft.getInstance().mouseHandler.ypos());
         }
 
+        _scroll = 0.0f;
         _inputCharacters = "";
         ImGui.newFrame();
     }
 
     public void render() {
-        ImGui.render();
-        _imGuiRenderer.renderDrawData(ImGui.getDrawData());
         newFrame();
 
         // Testing window
@@ -117,6 +118,11 @@ public class ImGuiLayer {
 
             ImGui.end();
         }
+
+        ImGui.showDemoWindow();
+
+        ImGui.render();
+        _imGuiRenderer.renderDrawData(ImGui.getDrawData());
     }
 
     @SubscribeEvent
@@ -146,8 +152,7 @@ public class ImGuiLayer {
     public void onScreenMouseScroll(ScreenEvent.MouseScrolled.Pre event) {
         ImGuiIO io = ImGui.getIO();
 
-        System.out.println(event.getScrollDelta());
-        io.setMouseWheel((float) event.getScrollDelta() * 100.0f);
+        _scroll = (float) event.getScrollDelta();
 
         if(io.getWantCaptureMouse())
             event.setCanceled(true);
@@ -155,9 +160,12 @@ public class ImGuiLayer {
 
     @SubscribeEvent
     public void onScreenKeyPress(ScreenEvent.KeyPressed.Pre event) {
+        if(event.getKeyCode() >= 512) return;
+
         ImGuiIO io = ImGui.getIO();
 
         io.setKeysDown(event.getKeyCode(), true);
+        System.out.println(event.getKeyCode() + " press");
 
         if(io.getWantTextInput() || (io.getWantCaptureKeyboard() && (
                 event.getKeyCode() == GLFW_KEY_TAB ||
@@ -187,10 +195,13 @@ public class ImGuiLayer {
     }
 
     @SubscribeEvent
-    public void onScreenKeyRelease(ScreenEvent.KeyPressed.Pre event) {
+    public void onScreenKeyRelease(ScreenEvent.KeyReleased.Pre event) {
+        if(event.getKeyCode() >= 512) return;
+
         ImGuiIO io = ImGui.getIO();
 
         io.setKeysDown(event.getKeyCode(), false);
+        System.out.println(event.getKeyCode() + " release");
 
         if(io.getWantTextInput() || (io.getWantCaptureKeyboard() && (
                 event.getKeyCode() == GLFW_KEY_TAB ||
@@ -240,7 +251,7 @@ public class ImGuiLayer {
         io.setMousePos(-1000.0f, -1000.0f);
 
         io.setMouseDown(new boolean[GLFW_MOUSE_BUTTON_LAST + 1]);
-        io.setKeysDown(new boolean[GLFW_KEY_LAST + 1]);
+        io.setKeysDown(new boolean[512]);
 
         ImGui.setWindowFocus(null);
     }
